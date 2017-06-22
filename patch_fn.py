@@ -10,12 +10,8 @@ def collate_data(data_store,cond_name_1, cond_name_2):
     cond1 = []
     cond2 = []
     for filename in data_store:
-        try:
-            if cond_name_1 in data_store[filename][cond_name_1]: pass
-        except:print 'you have not measured this parameter or it has been misspelt or does not exist.',cond_name_1
-        try:
-            if cond_name_2 in data_store[filename][cond_name_2]: pass
-        except:print 'you have not measured this parameter or it has been misspelt or does not exist.',cond_name_2
+        assert cond_name_1 in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_1
+        assert cond_name_2 in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_2
         cond1.extend(data_store[filename][cond_name_1])
         cond2.extend(data_store[filename][cond_name_2])
     return cond1,cond2
