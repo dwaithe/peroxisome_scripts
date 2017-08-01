@@ -18,7 +18,7 @@ def collate_data(data_store,cond_name_1, cond_name_2):
         cond1.extend(data_store[filename][cond_name_1])
         cond2.extend(data_store[filename][cond_name_2])
     return cond1,cond2
-def calculate_measurements_ch(data_store,diameter_of_roi,rand,num_of_ch):
+def calculate_measurements_ch(image_store,data_store,diameter_of_roi,rand,num_of_ch):
     ###Make the measurements for each file.
     for filename in data_store:
         print 'processing', filename
@@ -36,7 +36,7 @@ def calculate_measurements_ch(data_store,diameter_of_roi,rand,num_of_ch):
 
         for ch in range(0,num_of_ch):
 
-            chN = data_store[filename]['img_corr'][ch,:,:]
+            chN = image_store[filename]['output'][ch,:,:]
             chN_ave = []
             chN_sum = []
             chN_thr = []
@@ -82,6 +82,7 @@ def calculate_measurements_ch(data_store,diameter_of_roi,rand,num_of_ch):
                 rand_str = 'rand_'
 
             data_store[filename][rand_str+'ch'+str(ch)+'_ave'] = np.array(chN_ave)
+            data_store[filename][rand_str+'ch'+str(ch)+'_ave_norm'] = np.array(chN_ave_norm)
             data_store[filename][rand_str+'ch'+str(ch)+'_thr'] = chN_thr
             data_store[filename][rand_str+'ch'+str(ch)+'_raw'] = chN_raw
             data_store[filename][rand_str+'ch'+str(ch)+'_erd'] = chN_erd
@@ -93,7 +94,7 @@ def calculate_measurements_ch(data_store,diameter_of_roi,rand,num_of_ch):
             
     return data_store
 
-def calculate_measurements(data_store,diameter_of_roi,rand):
+def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
     ###Make the measurements for each file.
     for filename in data_store:
         print 'processing', filename
@@ -109,10 +110,10 @@ def calculate_measurements(data_store,diameter_of_roi,rand):
         mask = np.sqrt(ym**2+xm**2) < radius
         imask = np.sqrt(ym**2+xm**2) >= radius
 
-        ch0 = data_store[filename]['img_corr'][0,:,:]
-        ch1 = data_store[filename]['img_corr'][1,:,:]
-        ch2 = data_store[filename]['img_corr'][2,:,:]
-        ch3 = data_store[filename]['img_corr'][3,:,:]
+        ch0 = image_store[filename]['output'][0,:,:]
+        ch1 = image_store[filename]['output'][1,:,:]
+        ch2 = image_store[filename]['output'][2,:,:]
+        ch3 = image_store[filename]['output'][3,:,:]
 
         
 
@@ -246,20 +247,20 @@ def calculate_measurements(data_store,diameter_of_roi,rand):
             data_store[filename]['ch2_ave'] = np.array(ch2_ave)
             data_store[filename]['ch3_ave'] = np.array(ch3_ave)
 
-            data_store[filename]['ch0_thr'] = ch0_thr
-            data_store[filename]['ch1_thr'] = ch1_thr
-            data_store[filename]['ch2_thr'] = ch2_thr
-            data_store[filename]['ch3_thr'] = ch3_thr
+            #data_store[filename]['ch0_thr'] = ch0_thr
+            #data_store[filename]['ch1_thr'] = ch1_thr
+            #data_store[filename]['ch2_thr'] = ch2_thr
+            #data_store[filename]['ch3_thr'] = ch3_thr
 
-            data_store[filename]['ch0_raw'] = ch0_raw
-            data_store[filename]['ch1_raw'] = ch1_raw
-            data_store[filename]['ch2_raw'] = ch2_raw
-            data_store[filename]['ch3_raw'] = ch3_raw
+            #data_store[filename]['ch0_raw'] = ch0_raw
+            #data_store[filename]['ch1_raw'] = ch1_raw
+            #data_store[filename]['ch2_raw'] = ch2_raw
+            #data_store[filename]['ch3_raw'] = ch3_raw
 
-            data_store[filename]['ch0_erd'] = ch0_erd
-            data_store[filename]['ch1_erd'] = ch1_erd
-            data_store[filename]['ch2_erd'] = ch2_erd
-            data_store[filename]['ch3_erd'] = ch3_erd
+            #data_store[filename]['ch0_erd'] = ch0_erd
+            #data_store[filename]['ch1_erd'] = ch1_erd
+            #data_store[filename]['ch2_erd'] = ch2_erd
+            #data_store[filename]['ch3_erd'] = ch3_erd
 
             data_store[filename]['ch0_thr_area'] = ch0_thr_area
             data_store[filename]['ch1_thr_area'] = ch1_thr_area
@@ -295,20 +296,20 @@ def calculate_measurements(data_store,diameter_of_roi,rand):
             data_store[filename]['rand_ch2_ave'] = np.array(ch2_ave)
             data_store[filename]['rand_ch3_ave'] = np.array(ch3_ave)
 
-            data_store[filename]['rand_ch0_raw'] = ch0_raw
-            data_store[filename]['rand_ch1_raw'] = ch1_raw
-            data_store[filename]['rand_ch2_raw'] = ch2_raw
-            data_store[filename]['rand_ch3_raw'] = ch3_raw
+            #data_store[filename]['rand_ch0_raw'] = ch0_raw
+            #data_store[filename]['rand_ch1_raw'] = ch1_raw
+            #data_store[filename]['rand_ch2_raw'] = ch2_raw
+            #data_store[filename]['rand_ch3_raw'] = ch3_raw
 
-            data_store[filename]['rand_ch0_thr'] = ch0_thr
-            data_store[filename]['rand_ch1_thr'] = ch1_thr
-            data_store[filename]['rand_ch2_thr'] = ch2_thr
-            data_store[filename]['rand_ch3_thr'] = ch3_thr
+            #data_store[filename]['rand_ch0_thr'] = ch0_thr
+            #data_store[filename]['rand_ch1_thr'] = ch1_thr
+            #data_store[filename]['rand_ch2_thr'] = ch2_thr
+            #data_store[filename]['rand_ch3_thr'] = ch3_thr
 
-            data_store[filename]['rand_ch0_erd'] = ch0_erd
-            data_store[filename]['rand_ch1_erd'] = ch1_erd
-            data_store[filename]['rand_ch2_erd'] = ch2_erd
-            data_store[filename]['rand_ch3_erd'] = ch3_erd
+            #data_store[filename]['rand_ch0_erd'] = ch0_erd
+            #data_store[filename]['rand_ch1_erd'] = ch1_erd
+            #data_store[filename]['rand_ch2_erd'] = ch2_erd
+            #data_store[filename]['rand_ch3_erd'] = ch3_erd
 
             data_store[filename]['rand_ch0_thr_area'] = ch0_thr_area
             data_store[filename]['rand_ch1_thr_area'] = ch1_thr_area
