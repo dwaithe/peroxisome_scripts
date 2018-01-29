@@ -7,17 +7,110 @@ import csv
 import pylab as P
 import numpy as np
 import time
+from os import listdir
+from os.path import isfile, join
+import cPickle as pickle
+import pyperclip
+def copy_to_the_clipboard(values_arr):
+    
+    len_arr = []
+    for values in values_arr:
+        len_arr.append(values.__len__())
+    
+    out_str = ""
+    for v in range(0,max(len_arr)):
+        for values in values_arr:
+            try:
+                out_str = out_str +str(values[v])+"\t"
+            except:
+                out_str = out_str +"\t"
 
+
+        
+        out_str = out_str +"\n"
+
+    pyperclip.copy(out_str)
 #collates that data.
-def collate_data(data_store,cond_name_1, cond_name_2):
+def collect_data_measurements(folderlist):
+    """Function for populating our datastore based on specific directories."""
     cond1 = []
-    cond2 = []
+    data_store_cond = {}
+    c = 0
+    
+    for path in folderlist:
+        filelist = [ f for f in listdir(path) if isfile(join(path,f)) ]
+        for filename in filelist:
+
+            if filename !='.DS_Store' and filename[-2:] == '.p':
+                data_store_cond[c] = pickle.load( open(  path+filename, "rb" ) )
+                c = c+1
+    return data_store_cond
+
+def collate_data_XY(data_store,cond_name_X, cond_name_Y):
+    
+    """Convenience function whereby we collect and format two conditions simultaneously
+    
+    Inputs:
+    -----------------------------
+    data_store      Our dictionary containing the imported data
+    cond_name_X     The measurement we want to use for the x-axis.
+    cond_name_Y     The measurement we want to use for the y-axis.
+    
+    Outputs:
+    -----------------------------
+    condX           A list of data points for the specific X measurement
+    condY           A list of data points for the specific Y measurement
+
+    """
+
+    condX = []
+    condY = []
+    
+    for filename in data_store:
+        assert cond_name_X in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_X
+        assert cond_name_Y in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_Y
+        
+        condX.extend(data_store[filename][cond_name_X])
+        condY.extend(data_store[filename][cond_name_Y])
+    
+    return condX, condY
+
+def collate_data(data_store,cond_name,scalar=False):
+    """Function for collecting specific measurement data from our datastore dictionary"
+    
+    Inputs:
+    -----------------------------
+    data_store      Our dictionary containing the imported data
+    cond_name_X     The measurement we want to collect
+    
+    
+    Outputs:
+    -----------------------------
+    data_store_cond  A list of data points for the specific X measurement
+    
+
+    """
+    if scalar == False:
+        cond = []    
+        for filename in data_store:
+            assert cond_name in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name   
+            cond.extend(data_store[filename][cond_name]) 
+        return cond
+    else:
+        cond = []    
+        for filename in data_store:
+            assert cond_name in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name   
+            cond.append(data_store[filename][cond_name]) 
+        return cond
+
+def count_perox(data_store,cond_name_1, cond_name_2):
+    count = []
+    
     for filename in data_store:
         assert cond_name_1 in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_1
-        assert cond_name_2 in data_store[filename],'you have not measured this parameter or it has been misspelt or does not exist.'+cond_name_2
-        cond1.extend(data_store[filename][cond_name_1])
-        cond2.extend(data_store[filename][cond_name_2])
-    return cond1,cond2
+        count.append(data_store[filename][cond_name_1].__len__())
+        
+    return count
 def calculate_measurements_ch(image_store,data_store,diameter_of_roi,rand,num_of_ch):
     ###Make the measurements for each file.
     for filename in data_store:
@@ -36,7 +129,7 @@ def calculate_measurements_ch(image_store,data_store,diameter_of_roi,rand,num_of
 
         for ch in range(0,num_of_ch):
 
-            chN = image_store[filename]['output'][ch,:,:]
+            chN = image_store[filename]['img_corr'][ch,:,:]
             chN_ave = []
             chN_sum = []
             chN_thr = []
@@ -110,10 +203,10 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
         mask = np.sqrt(ym**2+xm**2) < radius
         imask = np.sqrt(ym**2+xm**2) >= radius
 
-        ch0 = image_store[filename]['output'][0,:,:]
-        ch1 = image_store[filename]['output'][1,:,:]
-        ch2 = image_store[filename]['output'][2,:,:]
-        ch3 = image_store[filename]['output'][3,:,:]
+        ch0 = image_store[filename]['img_corr'][0,:,:]
+        ch1 = image_store[filename]['img_corr'][1,:,:]
+        ch2 = image_store[filename]['img_corr'][2,:,:]
+        ch3 = image_store[filename]['img_corr'][3,:,:]
 
         
 
@@ -154,11 +247,17 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
 
         ch13_pea_arr = []
         ch13_pea_flip_arr = []
+        ch13_ch1_norm_to_ch3 = []
+        ch31_ch3_norm_to_ch1 = []
+
 
         for xp, yp in zip(xpts,ypts):
 
             sq_reg0 = ch0[yp-radius:yp+radius+1,xp-radius:xp+radius+1]
-            cir_reg0 = sq_reg0[mask]
+            try:
+                cir_reg0 = sq_reg0[mask]
+            except:
+                continue
             ch0_ave.append(np.average(cir_reg0))
             ch0_sum.append(np.sum(cir_reg0))
             thr = renyientropy(cir_reg0)
@@ -231,6 +330,9 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
             ch13_pea_flip /= np.sqrt(np.sum((np.array(cir_reg1)-np.average(cir_reg1))**2))*np.sqrt(np.sum((np.array(cir_flip3)-np.average(cir_flip3))**2))  
             ch13_pea_flip_arr.append(ch13_pea_flip)
 
+            ch13_ch1_norm_to_ch3.append(ch1_ave[-1]/ch3_ave[-1])
+            ch31_ch3_norm_to_ch1.append(ch3_ave[-1]/ch1_ave[-1])
+
 
             #Calculate 
 
@@ -242,6 +344,9 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
         ch3_ave_norm = np.copy(np.array(ch3_ave))/np.max(np.array(ch3_ave))
 
         if rand == False:
+
+            data_store[filename]['num_of_clust'] = xpts.__len__()
+
             data_store[filename]['ch0_ave'] = np.array(ch0_ave)
             data_store[filename]['ch1_ave'] = np.array(ch1_ave)
             data_store[filename]['ch2_ave'] = np.array(ch2_ave)
@@ -290,6 +395,8 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
 
             data_store[filename]['ch13_pea'] = np.array(ch13_pea_arr)
             data_store[filename]['ch13_pea_flip'] = np.array(ch13_pea_flip_arr)
+            data_store[filename]['ch13_ch1_norm_to_ch3'] = np.array(ch13_ch1_norm_to_ch3)
+            data_store[filename]['ch31_ch3_norm_to_ch1'] = np.array(ch31_ch3_norm_to_ch1)
         else:
             data_store[filename]['rand_ch0_ave'] = np.array(ch0_ave)
             data_store[filename]['rand_ch1_ave'] = np.array(ch1_ave)
@@ -338,6 +445,8 @@ def calculate_measurements(image_store,data_store,diameter_of_roi,rand):
 
             data_store[filename]['rand_ch13_pea'] = np.array(ch13_pea_arr)
             data_store[filename]['rand_ch13_pea_flip'] = np.array(ch13_pea_flip_arr)
+            data_store[filename]['rand_ch13_ch1_norm_to_ch3'] = np.array(ch13_ch1_norm_to_ch3)
+            data_store[filename]['rand_ch31_ch3_norm_to_ch1'] = np.array(ch31_ch3_norm_to_ch1)
     return data_store
 
     
